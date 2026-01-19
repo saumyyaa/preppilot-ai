@@ -32,7 +32,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://preppilot-ai.vercel.app",
+        "https://preppilot-ai-rxbo.vercel.app",
     ],
     allow_credentials=False,  # ✅ you are not using cookies
     allow_methods=["*"],
