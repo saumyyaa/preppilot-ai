@@ -16,30 +16,30 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("preppilot-backend")
 
 # -------------------- Env --------------------
-# Loads backend/.env locally. On Render, env vars are provided in dashboard.
 load_dotenv(dotenv_path=".env")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not OPENROUTER_API_KEY:
-    logger.warning("OPENROUTER_API_KEY is missing. Add it in Render Environment Variables or backend/.env locally.")
+    logger.warning(
+        "OPENROUTER_API_KEY is missing. Add it in Render Environment Variables or backend/.env locally."
+    )
 
 # -------------------- App --------------------
 app = FastAPI(title="PrepPilot Backend", version="1.0.0")
 
 # -------------------- CORS --------------------
-# Allow only your deployed frontend + localhost dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "https://preppilot-ai.vercel.app",
     ],
-    allow_credentials=False,   # ✅ safest since you're not using cookies
+    allow_credentials=False,  # ✅ you are not using cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ✅ Preflight handler for OPTIONS requests
+# ✅ Preflight handler (must be AFTER app is defined)
 @app.options("/{path:path}")
 async def preflight_handler(path: str, request: Request):
     return JSONResponse(content={"ok": True})
@@ -67,13 +67,10 @@ class GenerateResponse(BaseModel):
 
 
 # -------------------- Model + Agent --------------------
+# ✅ OpenRouter is OpenAI-compatible; just set base_url + api_key
 provider = OpenAIProvider(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
-    default_headers={
-        "HTTP-Referer": "https://preppilot-ai.vercel.app",
-        "X-Title": "PrepPilot",
-    },
 )
 
 model = OpenAIChatModel(
@@ -94,6 +91,7 @@ agent = Agent(
         "- hr_questions: 5 items\n"
         "- resume_improvements: 6-10 items\n"
         "- study_plan: exactly 7 items (Day 1..Day 7)\n"
+        "Return valid JSON only."
     ),
 )
 
