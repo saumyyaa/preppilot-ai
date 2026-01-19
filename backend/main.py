@@ -15,7 +15,7 @@ app = FastAPI(title="PrepPilot Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # allow frontend
+    allow_origins=["http://localhost:3000", "https://preppilot-ai.vercel.app",],  # allow frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
