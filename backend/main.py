@@ -16,13 +16,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("preppilot-backend")
 
 # -------------------- Env --------------------
-load_dotenv(dotenv_path=".env")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+# ✅ Local dev reads backend/.env
+# ✅ Render uses Environment Variables from dashboard
+load_dotenv()
 
-if not OPENROUTER_API_KEY:
-    logger.warning(
-        "OPENROUTER_API_KEY is missing. Add it in Render Environment Variables or backend/.env locally."
-    )
+
+def get_openrouter_key():
+    key = os.getenv("OPENROUTER_API_KEY")
+    if not key:
+        return None
+    return key.strip()  # ✅ removes hidden spaces/newlines
+
 
 # -------------------- App --------------------
 app = FastAPI(title="PrepPilot Backend", version="1.0.0")
@@ -34,7 +38,7 @@ app.add_middleware(
         "http://localhost:3000",
         "https://preppilot-ai-rxbo.vercel.app",
     ],
-    allow_credentials=False,  # ✅ you are not using cookies
+    allow_credentials=False,  # ✅ safest since you are not using cookies
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -67,10 +71,11 @@ class GenerateResponse(BaseModel):
 
 
 # -------------------- Model + Agent --------------------
-# ✅ OpenRouter is OpenAI-compatible; just set base_url + api_key
+# ✅ Provider: OpenRouter is OpenAI-compatible
+# We use a placeholder key and overwrite it at runtime in /generate
 provider = OpenAIProvider(
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
+    api_key="DUMMY",
 )
 
 model = OpenAIChatModel(
@@ -104,8 +109,18 @@ def root():
 
 @app.post("/generate", response_model=GenerateResponse)
 async def generate(payload: GenerateRequest):
+    # ✅ Load key fresh each request
+    OPENROUTER_API_KEY = get_openrouter_key()
+
+    logger.info("OPENROUTER_API_KEY present: %s", bool(OPENROUTER_API_KEY))
+    if OPENROUTER_API_KEY:
+        logger.info("OPENROUTER_API_KEY prefix: %s", OPENROUTER_API_KEY[:10])
+
     if not OPENROUTER_API_KEY:
         raise HTTPException(status_code=500, detail="OPENROUTER_API_KEY missing on server")
+
+    # ✅ Apply key at runtime
+    provider.api_key = OPENROUTER_API_KEY
 
     prompt = f"""
 LEVEL: {payload.level}
