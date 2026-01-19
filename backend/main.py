@@ -5,6 +5,13 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 import os
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.options("/{path:path}")
+async def preflight_handler(path: str, request: Request):
+    return JSONResponse(content={"ok": True})
+
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=".env")
@@ -16,7 +23,7 @@ app = FastAPI(title="PrepPilot Backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "https://preppilot-ai.vercel.app",],  # allow frontend
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
