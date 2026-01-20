@@ -33,7 +33,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://preppilot-ai-rxbo.vercel.app",
+        "https://preppilot-ai-mfxm.vercel.app",
     ],
     allow_credentials=False,
     allow_methods=["*"],
